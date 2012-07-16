@@ -72,17 +72,32 @@ use Date::Manip;
 use POSIX qw(strftime);
 use Env '@PATH';
 
-my %opts;
-getopts('xds:', \%opts);
-
 my $string_found = 0;
-
+my %opts;
+getopts('xds:f:', \%opts);
 my $name = shift or die usage();
 $name =~ s/^zone\.//;
-my $whoiscmd = findwhois();
-print STDERR "Whois command = $whoiscmd\n" if $opts{d};
-grok($whoiscmd, $name);
-exit 0;
+
+if (defined $opts{f}) {
+
+    my $filename = $opts{f};
+    if (-e $filename) {
+
+        my $catcmd = "cat $filename |";
+        print STDERR "cat command = $catcmd\n" if $opts{d};
+        grok($catcmd, $name);
+
+    } else {
+        critical("Unable to find WHOIS data in file $filename");
+    }
+
+} else {
+    my $whoispath = findwhois();
+    my $whoiscmd = buildwhoiscommand($whoispath, $name);
+    print STDERR "Whois path = $whoispath\n" if $opts{d};
+    print STDERR "Whois command = $whoiscmd\n" if $opts{d};
+    grok($whoiscmd, $name);
+}
 
 sub findwhois {
 	# List of whois commands to find (in order)
@@ -96,9 +111,9 @@ sub findwhois {
 	die "Could not find a whois command!\n";
 }
 
-sub grok {
+sub buildwhoiscommand {
 	my $whoiscmd = shift || die;
-        my $name = shift || die;
+    my $name = shift || die;
 	my $arg = $name;
 	if ($name =~ /\.name$/) {
 		# In order to get useful information out of
@@ -106,15 +121,21 @@ sub grok {
 		# be reformatted
 		$arg = "'domain = $name'";
 	}
-        open (CMD, "$whoiscmd $arg|") || die;
-        my $registrar = undef;
-        my $whoisservice = undef;
-        my $expires = undef;
-        my $status = '';
+  return "$whoiscmd $arg|";
+}
+
+sub grok {
+    my $command = shift || die;
+    my $name = shift || die;
+    open (CMD, $command) || die;
+    my $registrar = undef;
+    my $whoisservice = undef;
+    my $expires = undef;
+    my $status = '';
 	my $state = 0;
-        print STDERR "checking $name\n" if $opts{d};
-        while (<CMD>) {
-                tr/A-Z/a-z/;
+    print STDERR "checking $name\n" if $opts{d};
+    while (<CMD>) {
+        tr/A-Z/a-z/;
 		print if $opts{d};
                 $registrar = $1 if (/registrar:\s*(\S.*)/);
                 if (!defined($registrar)) {
