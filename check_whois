@@ -239,8 +239,9 @@ sub output {
 }       
 
 sub usage {
-	"usage: $0 [-xd] [-s string] domain\n".
+	"usage: $0 [-xd] [-s str] [-f path] domain\n".
 	"\t-d\tDebugging\n".
 	"\t-x\tDon't complain if Registrar cannot be determined.\n".
-	"\t-s str\tRequire that the string 'str' appear in the whois output\n";
+	"\t-s str\tRequire that the string 'str' appear in the whois output\n".
+	"\t-f path\tProvide path to text file of WHOIS data, no WHOIS check will be made\n";
 }
