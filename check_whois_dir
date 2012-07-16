@@ -10,9 +10,8 @@ do
   OUTPUT=`$WHOISCHECKPATH -f $f $f`
   if [ $? != 0 ]; then
     echo $OUTPUT
-    EXITCODE=1
+    EXITCODE=2 #nagios critical
   fi
 done
 
-echo "Exit code: $EXITCODE"
 exit $EXITCODE
