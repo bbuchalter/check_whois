@@ -1,0 +1,18 @@
+#!/bin/bash
+
+WHOISDATADIR=$1
+WHOISCHECKPATH=$2
+
+EXITCODE=0
+
+for f in $WHOISDATADIR/*
+do
+  OUTPUT=`$WHOISCHECKPATH -f $f $f`
+  if [ $? != 0 ]; then
+    echo $OUTPUT
+    EXITCODE=1
+  fi
+done
+
+echo "Exit code: $EXITCODE"
+exit $EXITCODE
