@@ -235,7 +235,7 @@ sub critical {
 sub output {
         my $state = shift;
         my $msg = shift;
-        printf "WHOIS %s: %s\n", $state, $msg;
+        printf "WHOIS $name %s: %s\n", $state, $msg;
 }       
 
 sub usage {
