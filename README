@@ -1,0 +1,30 @@
+usage: ./check_whois [-xd] [-s str] [-f path] domain
+        -d      Debugging
+        -x      Don't complain if Registrar cannot be determined.
+        -s str  Require that the string 'str' appear in the whois output
+        -f path Provide path to text file of WHOIS data, no WHOIS check will be made
+
+
+Suggested Nagios usage:
+
+define command {
+ command_name    check-whois
+ command_line    /path/to/check_whois $HOSTADDRESS$
+}
+
+define service {
+ name                   whois-service
+ check_command          check-whois
+ ...
+}
+
+define host {
+ use dns-zone
+ host_name zone.example.com
+ alias ZONE example.com
+}
+
+define service {
+ use whois-service
+ host_name zone.example.com
+}
