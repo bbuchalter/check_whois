@@ -1,11 +1,10 @@
+== Single check usage ==
 usage: ./check_whois [-xd] [-s str] [-f path] domain
         -d      Debugging
         -x      Don't complain if Registrar cannot be determined.
         -s str  Require that the string 'str' appear in the whois output
         -f path Provide path to text file of WHOIS data, no WHOIS check will be made
 
-
-Suggested Nagios usage:
 
 define command {
  command_name    check-whois
@@ -28,3 +27,11 @@ define service {
  use whois-service
  host_name zone.example.com
 }
+
+== Directory of WHOIS data usage ==
+./check_whois_dir /path/to/whois/data /path/to/check_whois
+
+
+
+
+
