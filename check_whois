@@ -75,7 +75,7 @@ use Env '@PATH';
 
 my $string_found = 0;
 my %opts;
-getopts('xds:f:', \%opts);
+getopts('xdis:f:', \%opts);
 my $name = shift or die usage();
 $name =~ s/^zone\.//;
 
@@ -205,17 +205,23 @@ sub grok {
 	} elsif (defined $opts{x}) {
 	    $t = time + (86400 * 90);
 	    $expires = 'UNKNOWN';
-	} else {
-            critical("Didn't find expiration timestamp");
+	} 
+    elsif (not(defined $opts{i})) {
+        critical("Didn't find expiration timestamp");
 	}
 
 	if (defined $opts{s} && 0 == $string_found) {
 		critical ("String '$opts{s}' not found in whois output");
 	}
 
+    if( (defined $opts{i}) and not(defined($expires))) {
+        success("Didn't find expiration timestamp, OK because -i set");
+    }
+    else {
         critical("Expires $expires at $registrar") if ($t - time < (86400*7));
         warning ("Expires $expires at $registrar") if ($t - time < (86400*28));
         success ("Expires $expires at $registrar");
+    }
 }       
 
 sub success {
@@ -245,4 +251,5 @@ sub usage {
 	"\t-x\tDon't complain if Registrar cannot be determined.\n".
 	"\t-s str\tRequire that the string 'str' appear in the whois output\n".
 	"\t-f path\tProvide path to text file of WHOIS data, no WHOIS check will be made\n";
+	"\t-i\tIgnore whois results with no expiration timestamp (e.g. .ro TLD)\n";
 }
