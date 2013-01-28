@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # nagios: -epn
 
 # $Id: check_whois,v 1.12 2011/10/18 22:10:04 wessels Exp $
@@ -73,10 +73,13 @@ use Date::Manip;
 use POSIX qw(strftime);
 use Env '@PATH';
 
+my $plugin_name = "Nagios check_whois";
+my $VERSION = "1.00";
+
 my $string_found = 0;
 my %opts;
 getopts('xdis:f:', \%opts);
-my $name = shift or die usage();
+my $name = shift or die HELP_MESSAGE();
 $name =~ s/^zone\.//;
 
 if (defined $opts{f}) {
@@ -257,11 +260,18 @@ sub output {
         printf "WHOIS $name %s: %s\n", $state, $msg;
 }       
 
-sub usage {
-	"usage: $0 [-xd] [-s str] [-f path] domain\n".
-	"\t-d\tDebugging\n".
-	"\t-x\tDon't complain if Registrar cannot be determined.\n".
-	"\t-s str\tRequire that the string 'str' appear in the whois output\n".
-	"\t-f path\tProvide path to text file of WHOIS data, no WHOIS check will be made\n";
-	"\t-i\tIgnore whois results with no expiration timestamp (e.g. .ro TLD)\n";
+sub HELP_MESSAGE {
+	print <<EOHELP
+USAGE
+$0 [-xdi] [-s str] [-f path] domain
+
+OPTIONS
+\t-d\tDebugging
+\t-x\tDon't complain if Registrar cannot be determined.
+\t-s str\tRequire that the string 'str' appear in the whois output
+\t-f path\tProvide path to text file of WHOIS data, no WHOIS check will be made
+\t-i\tIgnore whois results with no expiration timestamp (e.g. .ro TLD)
+
+EOHELP
+;
 }
