@@ -88,19 +88,20 @@ if (defined $opts{f}) {
         print STDERR "cat command = $catcmd\n" if $opts{d};
         grok($catcmd, $name);
 
-    } else {
+    } 
+    else {
         critical("Unable to find WHOIS data in file $filename");
     }
 
 } else {
-    my $whoispath = findwhois();
-    my $whoiscmd = buildwhoiscommand($whoispath, $name);
+    my $whoispath = find_whois();
+    my $whoiscmd = build_whois_command($whoispath, $name);
     print STDERR "Whois path = $whoispath\n" if $opts{d};
     print STDERR "Whois command = $whoiscmd\n" if $opts{d};
     grok($whoiscmd, $name);
 }
 
-sub findwhois {
+sub find_whois {
 	# List of whois commands to find (in order)
 	my @whoiscmds = qw( jwhois whois );
 	foreach my $wc (@whoiscmds) {
@@ -112,7 +113,7 @@ sub findwhois {
 	die "Could not find a whois command!\n";
 }
 
-sub buildwhoiscommand {
+sub build_whois_command {
 	my $whoiscmd = shift || die;
     my $name = shift || die;
 	my $arg = $name;
@@ -138,77 +139,88 @@ sub grok {
     while (<CMD>) {
         tr/A-Z/a-z/;
 		print if $opts{d};
-                $registrar = $1 if (/registrar:\s*(\S.*)/);
-                if (!defined($registrar)) {
-                        $registrar = $1 if (/registrar id:\s*(\S.*)/);
-                        $registrar = $1 if (/registrar handle\.*:\s*(\S.*)/);
-                        $registrar = $1 if (/\s+(.*)\s*\[tag\s*=.*\]/);
-			#
-			# CIRA whois output
-			if ($name =~ /\.ca$/ && /^registrar:/) {
-				$_ = <CMD>;
-                		tr/A-Z/a-z/;
-                        	$registrar = $1 if (/name:\s+(.*)/);
-			}
-                }
-
-                if (!defined($whoisservice)) {
-                        $whoisservice = $1 if (/the\s+(\w+)\s+whois\s+database/);
-                        $whoisservice = $1 if (/^\s+(\w+)\s+whois\s+service/);
-                        $whoisservice = $1 if (/record\s+maintained\s+by:\s+(\S.*)/);
-                }
-
-                if (/expiration date:\s*(\d\d-\w\w\w-\d\d\d\d)/) {
-                        $expires = $1;
-                } elsif (/(record )?(will )?expires? on[ :](.*)\.?$/) {
-                        $expires = $3;
-                } elsif (/expires:\s+([-\w\s]+)/) {
-                        $expires = $1;
-                } elsif (/(domain )?expiration date:\s+(.*)/) {
-                        $expires = $2;
-                } elsif ($name =~ /\.gov\.uk$/ && /renewal date:/) {
-			chomp($_ = <CMD>);
-                	tr/A-Z/a-z/;
-			$expires = $_;
-                } elsif (/(expiry|renewal) date:\s+(.*)/) {
-                        $expires = $2;
-                }
-
-		if (defined $opts{s}) {
-			$string_found = 1 if (/$opts{s}/i);
-		}
+        $registrar = $1 if (/registrar:\s*(\S.*)/);
+        if (!defined($registrar)) {
+            $registrar = $1 if (/registrar id:\s*(\S.*)/);
+            $registrar = $1 if (/registrar handle\.*:\s*(\S.*)/);
+            $registrar = $1 if (/\s+(.*)\s*\[tag\s*=.*\]/);
+            #
+            # CIRA whois output
+            if ($name =~ /\.ca$/ && /^registrar:/) {
+                $_ = <CMD>;
+                        tr/A-Z/a-z/;
+                            $registrar = $1 if (/name:\s+(.*)/);
+            }
         }
-        close(CMD);
+
+        if (!defined($whoisservice)) {
+            $whoisservice = $1 if (/the\s+(\w+)\s+whois\s+database/);
+            $whoisservice = $1 if (/^\s+(\w+)\s+whois\s+service/);
+            $whoisservice = $1 if (/record\s+maintained\s+by:\s+(\S.*)/);
+        }
+
+        if (/expiration date:\s*(\d\d-\w\w\w-\d\d\d\d)/) {
+            $expires = $1;
+        } 
+        elsif (/(record )?(will )?expires? on[ :](.*)\.?$/) {
+            $expires = $3;
+        } 
+        elsif (/expires:\s+([-\w\s]+)/) {
+            $expires = $1;
+        } 
+        elsif (/(domain )?expiration date:\s+(.*)/) {
+            $expires = $2;
+        } 
+        elsif ($name =~ /\.gov\.uk$/ && /renewal date:/) {
+            chomp($_ = <CMD>);
+            tr/A-Z/a-z/;
+            $expires = $_;
+        }
+        elsif (/(expiry|renewal) date:\s+(.*)/) {
+            $expires = $2;
+        }
+
+
+        if (defined $opts{s}) {
+            $string_found = 1 if (/$opts{s}/i);
+        }
+    }
+    close(CMD);
 
 	# Remove any trailing dot from the expire time
 	#
 	$expires =~ s/\.$// if defined $expires;
 
 	if (defined $registrar) {
-            $registrar = 'gandi' if ($registrar eq 'r42-lror');
-            $registrar = 'go daddy' if ($registrar =~ /go daddy/);
-            $registrar = 'go daddy' if ($registrar eq 'r91-lror');
-        } elsif (defined $whoisservice) {
-            $registrar = $whoisservice . ' whois service';
-	} elsif (defined $opts{x}) {
+        $registrar = 'gandi' if ($registrar eq 'r42-lror');
+        $registrar = 'go daddy' if ($registrar =~ /go daddy/);
+        $registrar = 'go daddy' if ($registrar eq 'r91-lror');
+    } 
+    elsif (defined $whoisservice) {
+        $registrar = $whoisservice . ' whois service';
+	} 
+    elsif (defined $opts{x}) {
 	    $registrar = 'UNKNOWN';
-	} else {
-            critical("Didn't find Registrar");
+	} 
+    else {
+        critical("Didn't find Registrar");
 	}
 
 	my $t;
 	if (defined $expires) {
-            $t = UnixDate($expires, "%s");
-            critical("Invalid expiration time '$expires'") unless defined $t;
-            critical("Invalid expiration time '$expires'") if ($t < 0);
-            $expires = strftime("%Y-%m-%d", localtime($t));
-	} elsif (defined $opts{x}) {
+        $t = UnixDate($expires, "%s");
+        critical("Invalid expiration time '$expires'") unless defined $t;
+        critical("Invalid expiration time '$expires'") if ($t < 0);
+        $expires = strftime("%Y-%m-%d", localtime($t));
+	} 
+    elsif (defined $opts{x}) {
 	    $t = time + (86400 * 90);
 	    $expires = 'UNKNOWN';
 	} 
     elsif (not(defined $opts{i})) {
         critical("Didn't find expiration timestamp");
 	}
+    
 
 	if (defined $opts{s} && 0 == $string_found) {
 		critical ("String '$opts{s}' not found in whois output");
@@ -236,7 +248,7 @@ sub warning {
 
 sub critical {
         output('CRITICAL', shift);
-        exit(2);
+        exit(4);
 }       
 
 sub output {
