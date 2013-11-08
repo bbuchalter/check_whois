@@ -179,8 +179,8 @@ sub grok {
             tr/A-Z/a-z/;
             $expires = $_;
         }
-        elsif (/(expiry|renewal) date:\s+(.*)/) {
-            $expires = $2;
+        elsif (/(expiry|renewal) (date|):\s+(.*)/) {
+            $expires = $3;
         }
 
 
