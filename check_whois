@@ -212,6 +212,12 @@ sub grok {
 	my $t;
 	if (defined $expires) {
         $t = UnixDate($expires, "%s");
+        if (!$t) {
+            # Try to parse the date in French format 'day/month/year'
+            my ($day, $month, $year) = ($expires =~ /(\d+)\/(\d+)\/(\d+)/);
+            $expires = "$month/$day/$year";
+            $t = UnixDate($expires, "%s");
+        }
         critical("Invalid expiration time '$expires'") unless defined $t;
         critical("Invalid expiration time '$expires'") if ($t < 0);
         $expires = strftime("%Y-%m-%d", localtime($t));
